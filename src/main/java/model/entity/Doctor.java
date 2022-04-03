@@ -1,21 +1,37 @@
 package model.entity;
 
 import lombok.*;
+import lombok.experimental.SuperBuilder;
+import model.entity.base.User;
+import org.hibernate.Hibernate;
 
-import javax.persistence.*;
+import javax.persistence.Entity;
+import javax.persistence.ManyToOne;
+import java.util.Objects;
 
 @Getter
 @Setter
+@ToString
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString
+@SuperBuilder(toBuilder = true)
 @Entity
-public class Doctor {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
-    private String name;
+public class Doctor extends User {
+    private String specialty;
 
     @ManyToOne
     private Clinic clinic;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
+        Doctor doctor = (Doctor) o;
+        return getId() != null && Objects.equals(getId(), doctor.getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
+    }
 }
