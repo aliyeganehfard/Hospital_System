@@ -1,18 +1,26 @@
+import controller.exception.*;
+import controller.exception.exceptionHandler.ExceptionHandler;
+import controller.service.DoctorService;
+import controller.service.PatientService;
+import controller.service.SecretaryService;
 import controller.service.Service;
 import model.entity.*;
 import model.repository.impl.*;
 
+import java.sql.Date;
+import java.sql.Time;
 import java.util.Scanner;
 
 public class Main {
     public static void main(String[] args) {
         var scn = new Scanner(System.in);
-        var doctorService = new Service< RepositoryImpl< Doctor,Integer> , Doctor,Integer>(new RepositoryImpl<>());
-        var clinicService = new Service< RepositoryImpl<Clinic,Integer> , Clinic,Integer>(new RepositoryImpl<>());
-        var patientService = new Service< RepositoryImpl<Patient,Integer> , Patient,Integer>(new RepositoryImpl<>());
-        var prescriptionService = new Service< RepositoryImpl<Prescription,Integer> , Prescription,Integer>(new RepositoryImpl<>());
-        var secretaryService = new Service< RepositoryImpl<Secretary,Integer> , Secretary,Integer>(new RepositoryImpl<>());
-        var turnService = new Service< RepositoryImpl<Turn,Integer> ,Turn,Integer>(new RepositoryImpl<>());
+        var doctorService = new DoctorService();
+        var patientService = new PatientService();
+        var secretaryService = new SecretaryService();
+        var clinicService = new Service<RepositoryImpl<Clinic, Integer>, Clinic, Integer>(new RepositoryImpl<>());
+        var prescriptionService = new Service<RepositoryImpl<Prescription, Integer>, Prescription, Integer>(new RepositoryImpl<>());
+        var turnService = new Service<RepositoryImpl<Turn, Integer>, Turn, Integer>(new RepositoryImpl<>());
+        var exceptionHandler = new ExceptionHandler();
         Doctor doctor = null;
         Clinic clinic = null;
         Patient patient = null;
@@ -22,77 +30,92 @@ public class Main {
         boolean flag = false;
         boolean state = true;
         int permission = -1;
-        String tempTerm = "";
         String id = "";
         String commendLine;
         String[] commend;
         while (state) {
             printLoginForm();
+            System.out.print("comment: ");
             commendLine = scn.nextLine().trim();
             commend = commendLine.split(" ");
             switch (commend[0]) {
+                case "addClinic":
+                    try {
+                        clinic = Clinic.builder()
+                                .id(null)
+                                .name(commend[1])
+                                .build();
+                        clinicService.save(clinic);
+                    } catch (Exception e) {
+                        System.out.println("wrong input");
+                    }
+                    break;
+                case "registerSecretory":
+                    try {
+                        exceptionHandler.isId(commend[3]);
+                        clinic = clinicService.findById(Clinic.class, Integer.valueOf(commend[3]));
+                        if (clinic == null) {
+                            throw new ClinicNotFoundException("clinic not found");
+                        }
+                        secretary = Secretary.builder()
+                                .id(null)
+                                .username(commend[1])
+                                .password(commend[2])
+                                .clinic(clinic)
+                                .name(commend[4])
+                                .build();
+                        secretaryService.save(secretary);
+                    } catch (IdException | ClinicNotFoundException exception) {
+                        System.out.println(exception.getMessage());
+                    } catch (Exception e) {
+                        System.out.println("wrong input");
+                    }
+                    break;
+                case "registerPatient":
+                    System.out.println("registerPatient username password name");
+                    try {
+                        patient = Patient.builder()
+                                .id(null)
+                                .username(commend[1])
+                                .password(commend[2])
+                                .name(commend[3])
+                                .build();
+                        patientService.save(patient);
+                    } catch (Exception e) {
+                        System.out.println("wrong input");
+                    }
+                    break;
                 case "login":
-                    trainingEmployee = trainingEmployeeService.login(TrainingEmployee.class, commend[1], commend[2]);
-                    student = studentService.login(Student.class, commend[1], commend[2]);
-                    professor = professorService.login(Professor.class, commend[1], commend[2]);
-                    if (trainingEmployee != null) {
-                        permission = 1;
-                        flag = true;
-                        printTrainingEmployeeCommend();
-                    } else if (student != null) {
-                        permission = 2;
-                        flag = true;
-                        printStudentCommend();
-                    } else if (professor != null) {
-                        permission = 3;
-                        flag = true;
-                        printProfessorCommend();
-                    } else {
-                        System.out.println("wrong userName or password!");
-                    }
-                    break;
-                case "registerCollege":
                     try {
-                        collegeService.save(
-                                new College(
-                                        null,
-                                        commend[1],
-                                        commend[1]
-                                )
-                        );
+                        System.out.println("login userName password ");
+                        secretary = secretaryService.login(commend[1], commend[2]);
+                        patient = patientService.login(commend[1], commend[2]);
+                        doctor = doctorService.login(commend[1], commend[2]);
+                        if (patient != null) {
+                            permission = 1;
+                            flag = true;
+                            printPatientMenu();
+                            break;
+                        }
+                        if (secretary != null) {
+                            permission = 2;
+                            flag = true;
+                            printSecretaryMenu();
+                            break;
+                        }
+                        if (doctor != null) {
+                            permission = 3;
+                            flag = true;
+                            printDoctorMenu();
+                            break;
+                        }
+                        System.out.println("user not found");
                     } catch (Exception e) {
                         System.out.println("wrong input");
                     }
                     break;
-                case "addTrainingEmployee":
-                    try {
-                        exceptionHandler.isId(Integer.valueOf(commend[4]));
-                        college = collegeService.findById(College.class, Integer.valueOf(commend[4]));
-                        if (college == null)
-                            throw new CollegeNotFound();
-                        trainingEmployeeService.save(
-                                new TrainingEmployee(
-                                        null,
-                                        commend[1],
-                                        commend[2],
-                                        commend[3],
-                                        college
-                                )
-                        );
-                    } catch (IdException idException) {
-                        System.out.println("incorrect id");
-                    } catch (CollegeNotFound collegeNotFound) {
-                        System.out.println("college not found");
-                    } catch (Exception e) {
-                        System.out.println("wrong input");
-                    }
-                    break;
-                case "showColleges":
-                    try {
-                        collegeService.findAll(College.class).forEach(System.out::println);
-                    } catch (Exception e) {
-                    }
-
+                case "showClinic":
+                    clinicService.findAll(Clinic.class).forEach(System.out::println);
                     break;
                 default:
                     System.out.println("wrong input");
@@ -100,6 +123,7 @@ public class Main {
             }
 
             while (flag) {
+
                 switch (permission) {
                     case 1:
                         System.out.print("commend : ");
@@ -107,276 +131,44 @@ public class Main {
                         commend = commendLine.split(" ");
                         switch (commend[0]) {
                             case "showProfile":
-                                System.out.println(trainingEmployeeService.findById(TrainingEmployee.class, trainingEmployee.getId()));
+                                System.out.println(patientService.findById(Patient.class, patient.getId()));
                                 break;
-                            case "registerStudent":
+                            case "showInformation":
                                 try {
-                                    exceptionHandler.isId(Integer.valueOf(commend[5]));
-                                    college = collegeService.findById(College.class, Integer.valueOf(commend[5]));
-                                    if (college == null)
-                                        throw new CollegeNotFound();
-                                    studentService.save(
-                                            new Student(
-                                                    null,
-                                                    commend[1],
-                                                    commend[2],
-                                                    commend[3],
-                                                    commend[4],
-                                                    college
-                                            )
-                                    );
-                                } catch (IdException idException) {
-                                    System.out.println("incorrect id");
-                                } catch (CollegeNotFound collegeNotFound) {
-                                    System.out.println("college not found");
+                                    patientService.getHistory(patient).forEach(System.out::println);
                                 } catch (Exception e) {
                                     System.out.println("wrong input");
                                 }
                                 break;
-                            case "deleteStudent":
+                            case "showClinic":
+                                clinicService.findAll(Clinic.class).forEach(System.out::println);
+                                break;
+                            case "showDoctor":
+                                doctorService.findAll(Doctor.class).forEach(System.out::println);
+                                break;
+                            case "showTurn":
                                 try {
-                                    exceptionHandler.isId(Integer.valueOf(commend[1]));
-                                    student = studentService.findById(Student.class, Integer.valueOf(commend[1]));
-                                    if (student == null)
-                                        throw new StudentNotFound();
-                                    studentService.delete(student);
-                                } catch (IdException idException) {
-                                    System.out.println("incorrect id");
-                                } catch (StudentNotFound studentNotFound) {
-                                    System.out.println("student not found");
+                                    secretaryService.getTurns().forEach(System.out::println);
                                 } catch (Exception e) {
                                     System.out.println("wrong input");
                                 }
                                 break;
-                            case "editStudent":
+                            case "bookTurn":
                                 try {
-                                    exceptionHandler.isId(Integer.valueOf(commend[1]));
-                                    student = studentService.findById(Student.class, Integer.valueOf(commend[1]));
-                                    if (student == null)
-                                        throw new StudentNotFound();
-                                    student.setUserName(commend[2]);
-                                    student.setPassword(commend[3]);
-                                    studentService.update(student);
-                                } catch (IdException idException) {
-                                    System.out.println("incorrect id");
-                                } catch (StudentNotFound studentNotFound) {
-                                    System.out.println("student not found");
+                                    exceptionHandler.isId(commend[1]);
+                                    turn = turnService.findById(Turn.class, Integer.valueOf(commend[1]));
+                                    if (turn == null)
+                                        throw new TurnNotFoundException("turn not find");
+                                    turn.setPatient(patient);
+                                    turnService.update(turn);
+                                } catch (IdException exception) {
+                                    System.out.println(exception.getMessage());
                                 } catch (Exception e) {
                                     System.out.println("wrong input");
                                 }
-                                break;
-                            case "registerProfessor":
-                                try {
-                                    exceptionHandler.isId(Integer.valueOf(commend[6]));
-                                    college = collegeService.findById(College.class, Integer.valueOf(commend[6]));
-                                    if (college == null)
-                                        throw new CollegeNotFound();
-                                    professorService.save(
-                                            new Professor(
-                                                    null,
-                                                    commend[1],
-                                                    commend[2],
-                                                    commend[3],
-                                                    commend[4],
-                                                    commend[5],
-                                                    college
-                                            )
-                                    );
-                                } catch (IdException idException) {
-                                    System.out.println("incorrect id");
-                                } catch (CollegeNotFound collegeNotFound) {
-                                    System.out.println("college not found");
-                                } catch (Exception e) {
-                                    System.out.println("wrong input");
-                                }
-                                break;
-                            case "deleteProfessor":
-                                try {
-                                    exceptionHandler.isId(Integer.valueOf(commend[1]));
-                                    professor = professorService.findById(Professor.class, Integer.valueOf(commend[1]));
-                                    if (professor == null)
-                                        throw new ProfessorNotFound();
-                                    professorService.delete(professor);
-                                } catch (IdException idException) {
-                                    System.out.println("incorrect id");
-                                } catch (ProfessorNotFound professorNotFound) {
-                                    System.out.println("professor not found");
-                                } catch (Exception e) {
-                                    System.out.println("wrong input");
-                                }
-                                break;
-                            case "editProfessor":
-                                try {
-                                    exceptionHandler.isId(Integer.valueOf(commend[1]));
-                                    professor = professorService.findById(Professor.class, Integer.valueOf(commend[1]));
-                                    if (professor == null)
-                                        throw new ProfessorNotFound();
-                                    professor.setUserName(commend[2]);
-                                    professor.setPassword(commend[3]);
-                                } catch (IdException idException) {
-                                    System.out.println("incorrect id");
-                                } catch (ProfessorNotFound professorNotFound) {
-                                    System.out.println("professor not found");
-                                } catch (Exception e) {
-                                    System.out.println("wrong input");
-                                }
-                                break;
-                            case "registerTrainingEmployee":
-                                try {
-                                    exceptionHandler.isId(Integer.valueOf(commend[4]));
-                                    college = collegeService.findById(College.class, Integer.valueOf(commend[4]));
-                                    if (college == null)
-                                        throw new CollegeNotFound();
-                                    trainingEmployeeService.save(
-                                            new TrainingEmployee(
-                                                    null,
-                                                    commend[1],
-                                                    commend[2],
-                                                    commend[3],
-                                                    college
-                                            )
-                                    );
-                                } catch (IdException idException) {
-                                    System.out.println("incorrect id");
-                                } catch (CollegeNotFound collegeNotFound) {
-                                    System.out.println("college not found");
-                                } catch (Exception e) {
-                                    System.out.println("wrong input");
-                                }
-                                break;
-                            case "deleteTrainingEmployee":
-                                try {
-                                    exceptionHandler.isId(Integer.valueOf(commend[1]));
-                                    trainingEmployee = trainingEmployeeService.findById(TrainingEmployee.class, Integer.valueOf(commend[1]));
-                                    if (trainingEmployee == null)
-                                        throw new TrainingEmployeeNotFound();
-                                    trainingEmployeeService.delete(trainingEmployee);
-                                } catch (TrainingEmployeeNotFound trainingEmployeeNotFound) {
-                                    System.out.println("training employee not found");
-                                } catch (IdException idException) {
-                                    System.out.println("incorrect id");
-                                } catch (Exception e) {
-                                    System.out.println("wrong input");
-                                }
-                                break;
-                            case "editTrainingEmployee":
-                                try {
-                                    exceptionHandler.isId(Integer.valueOf(commend[1]));
-                                    trainingEmployee = trainingEmployeeService.findById(TrainingEmployee.class, Integer.valueOf(commend[1]));
-                                    if (trainingEmployee == null)
-                                        throw new TrainingEmployeeNotFound();
-                                    trainingEmployee.setUserName(commend[2]);
-                                    trainingEmployee.setPassword(commend[3]);
-                                    trainingEmployeeService.update(trainingEmployee);
-                                } catch (TrainingEmployeeNotFound trainingEmployeeNotFound) {
-                                    System.out.println("training employee not found");
-                                } catch (IdException idException) {
-                                    System.out.println("incorrect id");
-                                } catch (Exception e) {
-                                    System.out.println("wrong input");
-                                }
-                                break;
-                            case "addCourse":
-                                try {
-                                    exceptionHandler.isId(Integer.valueOf(commend[3]));
-                                    exceptionHandler.isUnit(Integer.valueOf(commend[2]));
-                                    college = collegeService.findById(College.class, Integer.valueOf(commend[3]));
-                                    if (college == null)
-                                        throw new CollegeNotFound();
-                                    courseService.save(
-                                            new Course(
-                                                    null,
-                                                    commend[1],
-                                                    Integer.valueOf(commend[2]),
-                                                    college
-                                            )
-                                    );
-                                } catch (CollegeNotFound collegeNotFound) {
-                                    System.out.println("college not found");
-                                } catch (UnitException unitException) {
-                                    System.out.println("incorrect unit");
-                                } catch (IdException idException) {
-                                    System.out.println("incorrect id");
-                                } catch (Exception e) {
-                                    System.out.println("wrong input");
-                                }
-                                break;
-                            case "deleteCourse":
-                                try {
-                                    exceptionHandler.isId(Integer.valueOf(commend[1]));
-                                    course = courseService.findById(Course.class, Integer.valueOf(commend[1]));
-                                    if (course == null)
-                                        throw new CourseNotFound();
-                                    courseService.delete(course);
-                                } catch (CourseNotFound courseNotFound) {
-                                    System.out.println("course not found");
-                                } catch (IdException idException) {
-                                    System.out.println("incorrect id");
-                                } catch (Exception e) {
-                                    System.out.println("wrong input");
-                                }
-                                break;
-                            case "editCourse":
-                                try {
-                                    exceptionHandler.isId(Integer.valueOf(commend[1]));
-                                    exceptionHandler.isUnit(Integer.valueOf(commend[3]));
-                                    course = courseService.findById(Course.class, Integer.valueOf(commend[1]));
-                                    if (course == null)
-                                        throw new CourseNotFound();
-                                    course.setName(commend[2]);
-                                    course.setUnit(Integer.valueOf(commend[3]));
-                                    courseService.update(course);
-                                } catch (UnitException unitException) {
-                                    System.out.println("incorrect unit");
-                                } catch (IdException idException) {
-                                    System.out.println("incorrect id");
-                                } catch (CourseNotFound courseNotFound) {
-                                    System.out.println("course not found");
-                                } catch (Exception e) {
-                                    e.printStackTrace();
-                                    System.out.println("wrong input");
-                                }
-                                break;
-                            case "salary":
-                                System.out.println("");
-                                break;
-                            case "showStudentList":
-                                try {
-                                    studentService.findAll(Student.class).forEach(System.out::println);
-                                } catch (Exception e) {
-                                }
-
-                                break;
-                            case "showProfessorList":
-                                try {
-                                    professorService.findAll(Professor.class).forEach(System.out::println);
-                                } catch (Exception e) {
-                                }
-
-                                break;
-                            case "showTrainingEmployeeList":
-                                try {
-                                    trainingEmployeeService.findAll(TrainingEmployee.class).forEach(System.out::println);
-                                } catch (Exception e) {
-                                }
-
-                                break;
-                            case "showCourseList":
-                                try {
-                                    courseService.findAll(Course.class).forEach(System.out::println);
-                                } catch (Exception e) {
-                                }
-
-                                break;
-                            case "showColleges":
-                                try {
-                                    collegeService.findAll(College.class).forEach(System.out::println);
-                                } catch (Exception e) {
-                                }
-
                                 break;
                             case "help":
-                                printTrainingEmployeeCommend();
+                                printPatientMenu();
                                 break;
                             case "logout":
                                 flag = false;
@@ -396,77 +188,105 @@ public class Main {
                         commend = commendLine.split(" ");
                         switch (commend[0]) {
                             case "showProfile":
-                                System.out.println(studentService.findById(Student.class, student.getId()));
+                                System.out.println(secretaryService.findById(Secretary.class, secretary.getId()));
                                 break;
-                            case "showCoursesList":
-                                try {
-                                    courseService.findAll(Course.class).forEach(System.out::println);
-                                } catch (Exception e) {
-                                }
-
+                            case "showPatients":
+                                patientService.findAll(Patient.class).forEach(System.out::println);
                                 break;
-                            case "showProfessorList":
-                                try {
-                                    professorService.findAll(Professor.class).forEach(System.out::println);
-                                } catch (Exception e) {
-                                }
+                            case "showClinics":
+                                clinicService.findAll(Clinic.class).forEach(System.out::println);
                                 break;
-                            case "selectUnit":
+                            case "showDoctors":
+                                doctorService.findAll(Doctor.class).forEach(System.out::println);
+                                break;
+                            case "showHistory":
+                                secretaryService.getClinicHistory(secretary).forEach(System.out::println);
+                                break;
+                            case "showWaitingLinesTurn":
                                 try {
-                                    studentService.studentCourseMustSelect(student).forEach(System.out::println);
-                                }catch (Exception e){}
-
-                                try {
-
-                                    exceptionHandler.isId(Integer.valueOf(commend[1]));
-                                    exceptionHandler.isId(Integer.valueOf(commend[2]));
-                                    exceptionHandler.isTerm(Integer.valueOf(commend[3]));
-                                    professor = professorService.findById(Professor.class, Integer.valueOf(commend[1]));
-                                    course = courseService.findById(Course.class, Integer.valueOf(commend[2]));
-                                    student = studentService.findById(Student.class, student.getId());
-                                    System.out.println(student);
-                                    System.out.println(course);
-                                    System.out.println(professor);
-                                    scoreService.save(
-                                            new Score(
-                                                    null,
-                                                    student,
-                                                    professor,
-                                                    course,
-                                                    Integer.valueOf(commend[3]),
-                                                    null
-                                            )
-                                    );
-                                } catch (TermException termException) {
-                                    System.out.println("incorrect term");
-                                } catch (IdException idException) {
-                                    System.out.println("incorrect id");
-                                } catch (ProfessorNotFound professorNotFound) {
-                                    System.out.println("professor not found");
-                                } catch (CourseNotFound courseNotFound) {
-                                    System.out.println("course not found");
+                                    secretaryService.getClinicTurns(secretary).forEach(System.out::println);
                                 } catch (Exception e) {
-                                    e.printStackTrace();
                                     System.out.println("wrong input");
                                 }
                                 break;
-                            case "averagePoint":
-                                try{
-                                    System.out.println(studentService.getAveragePoint(student));
-                                }catch (Exception e){}
-                                break;
-                            case "mustSelect":
-                                studentService.studentCourseMustSelect(student).forEach(System.out::println);
-                                break;
-                            case "showSelectedCourses":
+                            case "showPatientHistory":
                                 try {
-                                    studentService.getStudentCourse(student.getId()).forEach(System.out::println);
+                                    exceptionHandler.isId(commend[1]);
+                                    patient = patientService.findById(Patient.class, Integer.valueOf(commend[1]));
+                                    if (patient == null)
+                                        throw new PatientNotFoundException("patient not found");
+                                    patientService.getHistory(patient).forEach(System.out::println);
+                                } catch (IdException | PatientNotFoundException exception) {
+                                    System.out.println(exception.getMessage());
                                 } catch (Exception e) {
-                                    e.printStackTrace();
+                                    System.out.println("wrong input");
+                                }
+                                break;
+                            case "addTurn":
+                                try {
+                                    exceptionHandler.isId(commend[3]);
+                                    exceptionHandler.isId(commend[4]);
+                                    clinic = clinicService.findById(Clinic.class, Integer.valueOf(commend[3]));
+                                    doctor = doctorService.findById(Doctor.class, Integer.valueOf(commend[4]));
+                                    if (clinic == null)
+                                        throw new ClinicNotFoundException("clinic not found");
+                                    if (doctor == null)
+                                        throw new DoctorNotFoundException("doctor not found");
+                                    if (commend[5].equals("waiting line"))
+                                        patient = null;
+                                    else {
+                                        exceptionHandler.isId(commend[5]);
+                                        patient = patientService.findById(Patient.class, Integer.valueOf(commend[5]));
+                                        if (patient == null)
+                                            throw new PatientNotFoundException("patient not found");
+                                    }
+
+                                    turn = Turn.builder()
+                                            .id(null)
+                                            .date(Date.valueOf(commend[1]))
+                                            .time(Time.valueOf(commend[2]))
+                                            .clinic(clinic)
+                                            .doctor(doctor)
+                                            .patient(patient)
+                                            .prescription(null)
+                                            .build();
+                                    turnService.save(turn);
+                                } catch (IdException | ClinicNotFoundException | DoctorNotFoundException | PatientNotFoundException exception) {
+                                    System.out.println(exception.getMessage());
+                                } catch (Exception e) {
+                                    System.out.println("wrong input");
+                                }
+                                break;
+                            case "addPatient":
+                                try {
+                                    patient = Patient.builder()
+                                            .id(null)
+                                            .username(commend[1])
+                                            .password(commend[2])
+                                            .name(commend[3])
+                                            .build();
+                                    patientService.save(patient);
+                                } catch (Exception e) {
+                                    System.out.println("wrong input");
+                                }
+                                break;
+                            case "addDoctor":
+                                try {
+                                    doctor = Doctor.builder()
+                                            .id(null)
+                                            .username(commend[1])
+                                            .password(commend[2])
+                                            .name(commend[3])
+                                            .specialty(commend[4])
+                                            .clinic(secretary.getClinic())
+                                            .build();
+                                    doctorService.save(doctor);
+                                } catch (Exception e) {
+                                    System.out.println("wrong input");
                                 }
                                 break;
                             case "help":
-                                printStudentCommend();
+                                printSecretaryMenu();
                                 break;
                             case "logout":
                                 flag = false;
@@ -486,38 +306,31 @@ public class Main {
                         commend = commendLine.split(" ");
                         switch (commend[0]) {
                             case "showProfile":
+                                System.out.println(doctorService.findById(Doctor.class, doctor.getId()));
                                 break;
-                            case "showCourses":
-                                courseService.findAll(Course.class).forEach(System.out::println);
+                            case "showTurn":
+                                doctorService.getTurns(doctor).forEach(System.out::println);
                                 break;
-                            case "showStudent":
-                                professorService.getStudent(professor).forEach(System.out::println);
-                                break;
-                            case "showWaitingStudentForeScore":
-                                professorService.setScoreForStudent(professor).forEach(System.out::println);
-                                break;
-                            case "setScore":
+                            case "setPrescription":
                                 try {
-                                    exceptionHandler.isId(Integer.valueOf(commend[1]));
-                                    score = scoreService.findById(Score.class, Integer.valueOf(commend[1]));
-                                    if (score == null)
-                                        throw new ScoreNotFound();
-                                    score.setScore(Double.valueOf(commend[2]));
-                                    scoreService.update(score);
-                                } catch (ScoreNotFound scoreException) {
-                                    System.out.println("score not fouond");
-                                } catch (IdException idException) {
-                                    System.out.println("incorrect id");
-                                } catch (ScoreException scoreException) {
-                                    System.out.println("incorrect score");
+                                    exceptionHandler.isId(commend[1]);
+                                    turn = turnService.findById(Turn.class, Integer.valueOf(commend[1]));
+                                    if (turn == null)
+                                        throw new TurnNotFoundException("turn not found");
+                                    prescription = Prescription.builder()
+                                            .id(null)
+                                            .description(commend[2])
+                                            .build();
+                                    prescriptionService.save(prescription);
+                                    turn.setPrescription(prescription);
+                                    turnService.update(turn);
+                                } catch (IdException | TurnNotFoundException exception) {
+                                    System.out.println(exception.getMessage());
                                 } catch (Exception e) {
                                     System.out.println("wrong input");
                                 }
                                 break;
-                            case "showSalary":
-                                break;
                             case "help":
-                                printProfessorCommend();
                                 break;
                             case "logout":
                                 flag = false;
@@ -543,13 +356,15 @@ public class Main {
         System.out.println("registerPatient username password name");
         System.out.println("login userName password ");
         System.out.println("showClinic");
-        System.out.print("commend : ");
     }
 
     public static void printPatientMenu() {
         System.out.println("showProfile");
         System.out.println("showInformation");
         System.out.println("showClinic");
+        System.out.println("showDoctor");
+        System.out.println("showTurn");
+        System.out.println("bookTurn turnId");
         System.out.println("help");
         System.out.println("logout");
         System.out.println("exit");
@@ -557,13 +372,28 @@ public class Main {
     }
 
     public static void printSecretaryMenu() {
-        System.out.println("showInformation");
-        System.out.println("addTurn ");
+        System.out.println("showPatients");
+        System.out.println("showClinics");
+        System.out.println("showDoctors");
+        System.out.println("showHistory");
+        System.out.println("showWaitingLinesTurn");
+        System.out.println("showPatientHistory patientId");
+        System.out.println("addTurn date time clinicId doctorId patientId||write->(waiting line)");
+        System.out.println("addPatient username password name");
+        System.out.println("addDoctor username password name specialty");
         System.out.println("help");
         System.out.println("logout");
         System.out.println("exit");
     }
 
-
+    public static void printDoctorMenu() {
+        System.out.println("showProfile");
+        System.out.println("showTurn");
+        System.out.println("setPrescription turnId description");
+        System.out.println("help");
+        System.out.println("logout");
+        System.out.println("exit");
     }
+
 }
+
