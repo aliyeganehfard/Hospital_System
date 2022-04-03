@@ -24,14 +24,21 @@ class RepositoryImplTest {
     @BeforeEach
     public void beforeEach() {
         repositoryDoctor = new Service<>(new RepositoryImpl<>());
-        repositoryClinic = new Service<>(new ClinicRepositoryImpl());
+        repositoryClinic = new Service<>(new RepositoryImpl<>());
     }
 
 
     @Test
     void save() {
         //        arrange
-        var doctor = new Doctor(null, "azad", null);
+        var doctor = Doctor.builder()
+                .id(null)
+                .username("a")
+                .password("a")
+                .name("b")
+                .specialty("d")
+                .clinic(null)
+                .build();
 //        act
         repositoryDoctor.save(doctor);
         var load = repositoryDoctor.findById(Doctor.class, doctor.getId());
@@ -42,23 +49,41 @@ class RepositoryImplTest {
     @Test
     void update() {
         //        arrange
-        var clinic = new Clinic(null, "aaa");
+//        var clinic = new Clinic("aaa");
+        var clinic = Clinic.builder()
+                .id(null)
+                .name("lar")
+                .build();
 //        act
         repositoryClinic.save(clinic);
-        repositoryClinic.update(new Clinic(clinic.getId(), "tehran"));
+        repositoryClinic.update(
+                Clinic.builder()
+                        .id(clinic.getId())
+                        .name("bbb")
+                        .build()
+        );
         var load = repositoryClinic.findById(Clinic.class, clinic.getId());
+        System.out.println("--------------------------------------");
+        System.out.println(load);
 //        assert
-        Assertions.assertThat("tehran").isEqualTo(load.getName());
+        Assertions.assertThat("bbb").isEqualTo(load.getName());
     }
 
     @Test
     void delete() {
         //        arrange
-        var doctor = new Doctor(null, "dff",null);
+        var doctor = Doctor.builder()
+                .id(null)
+                .username("a")
+                .password("aa")
+                .name("ali")
+                .specialty("dnt")
+                .clinic(null)
+                .build();
 //        act
         repositoryDoctor.save(doctor);
         repositoryDoctor.delete(doctor);
-        var load = repositoryDoctor.findById(Doctor.class,doctor.getId());
+        var load = repositoryDoctor.findById(Doctor.class, doctor.getId());
 //        assert
         Assertions.assertThat(load).isNull();
     }
@@ -71,7 +96,14 @@ class RepositoryImplTest {
     @Test
     void findById() {
         //        arrange
-        var doctor = new Doctor(null, "sddff",null);
+        var doctor = Doctor.builder()
+                .id(null)
+                .username("a")
+                .password("aa")
+                .name("ali")
+                .specialty("dnt")
+                .clinic(null)
+                .build();
 //        act
         repositoryDoctor.save(doctor);
         var load = repositoryDoctor.findById(Doctor.class,doctor.getId());
@@ -82,7 +114,14 @@ class RepositoryImplTest {
     @Test
     void findAll() {
         //        arrange
-        var doctor = new Doctor(null, "sddff",null);
+        var doctor = Doctor.builder()
+                .id(null)
+                .username("a")
+                .password("aa")
+                .name("ali")
+                .specialty("dnt")
+                .clinic(null)
+                .build();
 //        act
         var size = repositoryDoctor.findAll(Doctor.class);
         repositoryDoctor.save(doctor);
