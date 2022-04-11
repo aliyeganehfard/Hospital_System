@@ -14,7 +14,6 @@ import java.util.Objects;
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder(toBuilder = true)
-@ToString
 @Entity
 public class Secretary extends User {
     @ManyToOne
@@ -31,5 +30,16 @@ public class Secretary extends User {
     @Override
     public int hashCode() {
         return getClass().hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return "Secretary{" +
+                "id ='" + super.getId() + '\'' +
+                "name ='" + super.getName() + '\'' +
+                "username ='" + super.getUsername() + '\'' +
+                "password ='" + super.getPassword() + '\'' +
+                "clinic=" + clinic +
+                '}';
     }
 }
