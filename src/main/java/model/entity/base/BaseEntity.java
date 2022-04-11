@@ -15,6 +15,7 @@ import java.util.Objects;
 @Getter
 @Setter
 @SuperBuilder(toBuilder = true)
+@ToString
 @MappedSuperclass
 @NoArgsConstructor
 public class BaseEntity<ID extends Serializable> {
