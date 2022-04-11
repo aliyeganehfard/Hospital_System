@@ -30,4 +30,12 @@ public class Prescription extends BaseEntity<Integer> {
     public int hashCode() {
         return getClass().hashCode();
     }
+
+    @Override
+    public String toString() {
+        return "Prescription{" +
+                "id ='" + super.getId() + '\'' +
+                "description='" + description + '\'' +
+                '}';
+    }
 }
