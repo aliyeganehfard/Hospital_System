@@ -34,4 +34,16 @@ public class Doctor extends User {
     public int hashCode() {
         return getClass().hashCode();
     }
+
+    @Override
+    public String toString() {
+        return "Doctor{" +
+                "id ='" + super.getId() + '\'' +
+                "name ='" + super.getName() + '\'' +
+                "username ='" + super.getUsername() + '\'' +
+                "password ='" + super.getPassword() + '\'' +
+                "specialty='" + specialty + '\'' +
+                ", clinic=" + clinic +
+                '}';
+    }
 }
