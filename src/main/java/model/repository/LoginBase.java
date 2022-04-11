@@ -1,5 +1,6 @@
 package model.repository;
 
+import model.entity.base.User;
 import model.util.SingletonConnection;
 
 import javax.persistence.NoResultException;
@@ -13,8 +14,7 @@ public interface LoginBase<T> {
                 var criteriaBuilder = session.getCriteriaBuilder();
                 var criteriaQuery = criteriaBuilder.createQuery(tClass);
                 var root = criteriaQuery.from(tClass);
-
-                var userNameEqual = criteriaBuilder.equal(root.get("userName"),userName);
+                var userNameEqual = criteriaBuilder.equal(root.get("username"),userName);
                 var passwordEqual = criteriaBuilder.equal(root.get("password"),password);
 
                 var query = criteriaQuery
@@ -22,8 +22,6 @@ public interface LoginBase<T> {
                         .where(criteriaBuilder.and(userNameEqual,passwordEqual));
                 return session.createQuery(query).getSingleResult();
             }catch (NoResultException e){
-//                 transaction.rollback();
-//                 e.printStackTrace();
             }
         }
         return null;
