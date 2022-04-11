@@ -87,7 +87,6 @@ public class Main {
                     break;
                 case "login":
                     try {
-                        System.out.println("login userName password ");
                         secretary = secretaryService.login(commend[1], commend[2]);
                         patient = patientService.login(commend[1], commend[2]);
                         doctor = doctorService.login(commend[1], commend[2]);
@@ -204,7 +203,7 @@ public class Main {
                                 break;
                             case "showWaitingLinesTurn":
                                 try {
-                                    secretaryService.getClinicTurns(secretary).forEach(System.out::println);
+                                    secretaryService.getWaitingLineTurns(secretary).forEach(System.out::println);
                                 } catch (Exception e) {
                                     System.out.println("wrong input");
                                 }
@@ -232,7 +231,7 @@ public class Main {
                                         throw new ClinicNotFoundException("clinic not found");
                                     if (doctor == null)
                                         throw new DoctorNotFoundException("doctor not found");
-                                    if (commend[5].equals("waiting line"))
+                                    if (commend[5].equals("waiting_line"))
                                         patient = null;
                                     else {
                                         exceptionHandler.isId(commend[5]);
@@ -240,7 +239,6 @@ public class Main {
                                         if (patient == null)
                                             throw new PatientNotFoundException("patient not found");
                                     }
-
                                     turn = Turn.builder()
                                             .id(null)
                                             .date(Date.valueOf(commend[1]))
@@ -250,8 +248,10 @@ public class Main {
                                             .patient(patient)
                                             .prescription(null)
                                             .build();
+                                    secretaryService.checkTurn(secretary, turn);
                                     turnService.save(turn);
-                                } catch (IdException | ClinicNotFoundException | DoctorNotFoundException | PatientNotFoundException exception) {
+
+                                } catch (IdException | TurnBookedException | ClinicNotFoundException | DoctorNotFoundException | PatientNotFoundException exception) {
                                     System.out.println(exception.getMessage());
                                 } catch (Exception e) {
                                     System.out.println("wrong input");
@@ -378,7 +378,7 @@ public class Main {
         System.out.println("showHistory");
         System.out.println("showWaitingLinesTurn");
         System.out.println("showPatientHistory patientId");
-        System.out.println("addTurn date time clinicId doctorId patientId||write->(waiting line)");
+        System.out.println("addTurn date time clinicId doctorId patientId||write->(waiting_line)");
         System.out.println("addPatient username password name");
         System.out.println("addDoctor username password name specialty");
         System.out.println("help");
