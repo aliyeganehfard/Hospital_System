@@ -42,6 +42,8 @@ class RepositoryImplTest {
 //        act
         repositoryDoctor.save(doctor);
         var load = repositoryDoctor.findById(Doctor.class, doctor.getId());
+        System.out.println("----------------------------------------");
+        System.out.println(load);
 //        assert
         Assertions.assertThat(load).isNotNull();
     }
@@ -63,8 +65,6 @@ class RepositoryImplTest {
                         .build()
         );
         var load = repositoryClinic.findById(Clinic.class, clinic.getId());
-        System.out.println("--------------------------------------");
-        System.out.println(load);
 //        assert
         Assertions.assertThat("bbb").isEqualTo(load.getName());
     }
