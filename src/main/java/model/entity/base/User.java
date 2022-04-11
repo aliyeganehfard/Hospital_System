@@ -11,10 +11,12 @@ import java.util.Objects;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@ToString
 @SuperBuilder(toBuilder = true)
 @Table(name = "users")
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorColumn(name = "user_type" , discriminatorType = DiscriminatorType.INTEGER)
+@Entity
 public class User extends BaseEntity<Integer>{
     private String username;
     private String password;
