@@ -1,5 +1,7 @@
 package controller.service;
 
+import controller.exception.IdException;
+import controller.exception.TurnBookedException;
 import model.entity.Patient;
 import model.entity.Secretary;
 import model.entity.Turn;
@@ -25,6 +27,21 @@ public class SecretaryService extends Service<SecretaryRepositoryImpl, Secretary
                 .stream()
                 .filter(turn -> turn.getPatient() != null && turn.getClinic().equals(secretary.getClinic()))
                 .collect(Collectors.toList());
+    }
+    public List<Turn> getWaitingLineTurns(Secretary secretary){
+        return turnService.findAll(Turn.class)
+                .stream()
+                .filter(turn -> turn.getPatient() == null && turn.getClinic().equals(secretary.getClinic()))
+                .collect(Collectors.toList());
+    }
+    public void checkTurn(Secretary secretary,Turn turn){
+        var load = getWaitingLineTurns(secretary);
+        load
+                .forEach(turn1 -> {
+                    if (turn1.getDate().equals(turn.getDate()) && turn1.getTime().equals(turn.getTime())){
+                            throw new TurnBookedException("this time already booked");
+                    }
+                });
     }
     public List<Turn> getTurns(){
         return turnService.findAll(Turn.class)
