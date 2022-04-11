@@ -15,7 +15,6 @@ import java.util.Objects;
 @Setter
 @NoArgsConstructor
 @SuperBuilder(toBuilder = true)
-@ToString
 @Entity
 public class Patient extends User {
     @Override
@@ -29,5 +28,14 @@ public class Patient extends User {
     @Override
     public int hashCode() {
         return getClass().hashCode();
+    }
+    @Override
+    public String toString() {
+        return "patient{" +
+                "id ='" + super.getId() + '\'' +
+                "name ='" + super.getName() + '\'' +
+                "username ='" + super.getUsername() + '\'' +
+                "password ='" + super.getPassword() + '\'' +
+                '}';
     }
 }
