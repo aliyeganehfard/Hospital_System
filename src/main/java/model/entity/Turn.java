@@ -45,4 +45,17 @@ public class Turn extends BaseEntity<Integer> {
     public int hashCode() {
         return getClass().hashCode();
     }
+
+    @Override
+    public String toString() {
+        return "Turn{" +
+                "id ='" + super.getId() + '\'' +
+                "date=" + date +
+                ", time=" + time +
+                ", clinic=" + clinic +
+                ", doctor=" + doctor +
+                ", patient=" + patient +
+                ", prescription=" + prescription +
+                '}';
+    }
 }
